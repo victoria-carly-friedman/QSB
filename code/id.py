@@ -137,8 +137,43 @@ def make_data(path):
         print(other_formats)
         sys.exit()
 #---------------------------------------------------------------------------------------------------------------------------
-india_datetime = datetime.strftime(datetime.now(tz=pytz.timezone("Asia/Kolkata")),format="%Y-%m-%d %I:%M %p")
-source_path    = input("source path : ")
+def folder_contents(df,folder_name,assumed_folder):
+    
+    pornstar_folder = [i[0].strip() for i in df["filename"].str.split("-").tolist()]
+    
+    if len(list(set(pornstar_folder))) > 1:
+        
+        print("the "+folder_name+" has more than one pornstar")
+        
+        print(folder_name+" folder can have only one pornstar")
+        
+        print_number     = 0
+        
+        for i in list(set(pornstar_folder)):
+            
+            print(str(print_number+1)+". "+i)
+            
+            print_number = print_number + 1 
+        
+        return sys.exit()    
+    
+    else:
+        
+        if pornstar_folder[0] == assumed_folder:
+            
+            return pornstar_folder[0]
+        
+        else:
+            
+            print(display("pornstar in the folder",pornstar_folder[0]))
+            print(display("processing for pornstar",assumed_folder))
+                  
+            return sys.exit()
+#---------------------------------------------------------------------------------------------------------------------------    
+india_datetime  = datetime.strftime(datetime.now(tz=pytz.timezone("Asia/Kolkata")),format="%Y-%m-%d %I:%M %p")
+source_path     = input("source path : ")
+
+pornstar_folder = source_path.split("\\")[-1]
 
 print(line())
 print(display("code execution time",india_datetime))
@@ -177,7 +212,12 @@ if source_df.empty:
 else:
 
     source_df["filename"]  = source_df["filename"].astype("str")
+
     source_df["filename"]  = source_df["filename"].str.strip()
+
+    source_folder          = folder_contents(source_df,"source folder",pornstar_folder)
+    
+    print(display("source folder",source_folder))
 
     if  source_df["ticket"].isnull().sum() != len(source_df):
         
@@ -211,13 +251,19 @@ if tickets_df.empty:
 
     print("tickets_df is empty")
 
-    tickets_df = pd.DataFrame({"filename":[],"ticket":[]})
+    tickets_df     = pd.DataFrame({"filename":[],"ticket":[]})
+
+    tickets_folder = pornstar_folder
 
 else:
 
     tickets_df["filename"] = tickets_df["filename"].astype("str")
     
     tickets_df["filename"] = tickets_df["filename"].str.strip()
+
+    tickets_folder         = folder_contents(tickets_df,"tickets folder",pornstar_folder)
+    
+    print(display("tickets folder",tickets_folder))
 
     tickets_df_not_null    = tickets_df[tickets_df["ticket"].notnull()]
 
@@ -249,11 +295,22 @@ print(line())
 #---------------------------------------------------------------------------------------------------------------------------
 print("info")
 
-qsb = source_df.merge(tickets_df,on="filename",how="left",suffixes=(' (source_df)', ' (tickets_df)'))
+if source_folder == tickets_folder:
 
-qsb = qsb.replace({np.nan:None})
+    qsb = source_df.merge(tickets_df,on="filename",how="left",suffixes=(' (source_df)', ' (tickets_df)'))
 
-print(qsb)
+    qsb = qsb.replace({np.nan:None})
+
+    print(qsb)
+
+else:
+
+    print(display("source_folder",source_folder))
+    print(display("tickets_folder",tickets_folder))
+
+    print("source_folder &  tickets_folder should be matching")
+
+    sys.exit()
 #---------------------------------------------------------------------------------------------------------------------------
 # remove_ticket_from_source
 print(line())
